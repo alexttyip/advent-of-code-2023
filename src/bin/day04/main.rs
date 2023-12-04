@@ -1,69 +1,53 @@
+use itertools::Itertools;
 use std::collections::HashSet;
 use std::fs;
 use std::time::Instant;
 
 type Int = usize;
-type InputType = Vec<String>;
+type InputType = Vec<Int>;
+
+fn count_matches_for_line(line: &str) -> Int {
+    let (lhs, rhs): (&str, &str) = line
+        .split_terminator(&[':', '|'][..])
+        .skip(1)
+        .collect_tuple()
+        .unwrap();
+
+    let lhs_set = lhs.split_whitespace().collect::<HashSet<&str>>();
+    let rhs_set = rhs.split_whitespace().collect::<HashSet<&str>>();
+
+    lhs_set.intersection(&rhs_set).count()
+}
 
 fn read_input() -> InputType {
     fs::read_to_string("./src/bin/day04/input.txt")
         .unwrap()
         .trim()
         .lines()
-        .map(|s| s.to_string())
+        .map(count_matches_for_line)
         .collect()
 }
 
-fn count_matches_for_line(line: &str) -> Int {
-    let mut set = HashSet::new();
-    let mut matches = 0;
-    let mut is_lhs = true;
-
-    for num in line.split_whitespace().skip(2) {
-        if num == "|" {
-            is_lhs = false;
-            continue;
-        }
-
-        if is_lhs {
-            set.insert(num);
-            continue;
-        }
-
-        if set.contains(&num) {
-            matches += 1;
-        }
-    }
-
-    matches
-}
-
 fn part1(input: InputType) -> Int {
-    let mut sum = 0;
-
-    for line in input {
-        let matches = count_matches_for_line(&line);
-
-        if matches >= 1 {
-            sum += 1 << (matches - 1);
-        }
-    }
-
-    sum
+    input
+        .iter()
+        .map(|&matches| if matches >= 1 { 1 << (matches - 1) } else { 0 })
+        .sum()
 }
 
 fn part2(input: InputType) -> Int {
-    let mut count = vec![1; input.len()];
+    input
+        .iter()
+        .enumerate()
+        .fold(vec![1; input.len()], |mut acc, (card, card_winnings)| {
+            for i in 0..*card_winnings {
+                acc[card + i + 1] += acc[card];
+            }
 
-    for (card, line) in input.iter().enumerate() {
-        let card_winnings = count_matches_for_line(line);
-
-        for i in 1..=card_winnings {
-            count[card + i] += count[card];
-        }
-    }
-
-    count.iter().sum()
+            acc
+        })
+        .iter()
+        .sum()
 }
 
 pub fn main() {
