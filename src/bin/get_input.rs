@@ -45,7 +45,7 @@ fn setup_day(day: u8) {
 
     let input = fetch_input(day);
 
-    let rust_file = fs::read_to_string("./src/bin/template/main.rs")
+    let rust_file = fs::read_to_string("examples/main.rs")
         .unwrap()
         .replace("00", format!("{day:02}").as_str());
 

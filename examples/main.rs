@@ -5,19 +5,16 @@ type Int = u16;
 type InputType = Vec<Int>;
 
 fn read_input() -> InputType {
-    fs::read_to_string("./src/bin/day00/input.txt")
-        .unwrap()
-        .trim()
-        .lines()
-        .flat_map(|s| s.parse::<Int>())
-        .collect()
+    let file = fs::read_to_string("./src/bin/day00/input.txt").unwrap();
+
+    file.trim().lines().flat_map(|s| s.parse::<Int>()).collect()
 }
 
-fn part1(_input: InputType) -> Int {
+fn part1(input: InputType) -> Int {
     0
 }
 
-fn part2(_input: InputType) -> Int {
+fn part2(input: InputType) -> Int {
     0
 }
 
