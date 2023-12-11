@@ -1,61 +1,57 @@
-use std::collections::HashSet;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 use std::fs;
 use std::time::Instant;
 
-use itertools::Itertools;
-
 type Int = i64;
-type InputType = HashSet<Coord>;
-type Coord = (Int, Int);
-
-const N: Int = 140;
+type InputType = (BinaryHeap<Reverse<Int>>, BinaryHeap<Reverse<Int>>);
 
 fn read_input() -> InputType {
     let file = fs::read_to_string("./src/bin/day11/input.txt").unwrap();
 
-    let mut points = HashSet::new();
+    let mut rows = BinaryHeap::new();
+    let mut cols = BinaryHeap::new();
 
     for (row, line) in file.lines().enumerate() {
         for (col, c) in line.chars().enumerate() {
             if c == '#' {
-                points.insert((row as Int, col as Int));
+                rows.push(Reverse(row as Int));
+                cols.push(Reverse(col as Int));
             }
         }
     }
 
-    points
+    (rows, cols)
 }
 
-fn manhattan(&(r, c): &Coord, &(rr, cc): &Coord) -> Int {
-    (r - rr).abs() + (c - cc).abs()
-}
+fn axis_sum(mut nums: BinaryHeap<Reverse<Int>>, factor: Int) -> Int {
+    let mut res = 0;
+    let mut sum = 0;
 
-fn sum_paths(input: InputType, factor: Int) -> Int {
-    let mut empty_rows = vec![];
-    let mut empty_cols = vec![];
+    // Numbers are never negative
+    let mut prev = Int::MIN;
+    let mut i = 0;
+    let mut duplicate_nums = 0;
 
-    for i in 0..N {
-        if input.iter().all(|(r, _)| r != &i) {
-            empty_rows.push(i);
+    while let Some(Reverse(mut num)) = nums.pop() {
+        if prev == num {
+            duplicate_nums += 1;
         }
+        prev = num;
 
-        if input.iter().all(|(_, c)| c != &i) {
-            empty_cols.push(i);
-        }
+        // Account for universe expansion
+        num += (num - i + duplicate_nums) * (factor - 1);
+
+        res += num * i - sum;
+        sum += num;
+        i += 1;
     }
 
-    input
-        .iter()
-        .map(|(r, c)| {
-            (
-                r + empty_rows.partition_point(|rr| rr < r) as Int * (factor - 1),
-                c + empty_cols.partition_point(|cc| cc < c) as Int * (factor - 1),
-            )
-        })
-        .combinations(2)
-        .fold(0, |acc, comb| {
-            acc + manhattan(comb.first().unwrap(), comb.last().unwrap())
-        })
+    res
+}
+
+fn sum_paths((rows, cols): InputType, factor: Int) -> Int {
+    axis_sum(rows, factor) + axis_sum(cols, factor)
 }
 
 fn part1(input: InputType) -> Int {
